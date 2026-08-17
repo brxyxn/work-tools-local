@@ -50,6 +50,7 @@ export function TextDiffTool({ initialDraft, workspace, onMutationError, flushRe
         savedKeyRef.current = key;
       } catch (error) {
         onMutationError(error instanceof Error ? error.message : "Unable to save the Text Diff draft.");
+        throw error;
       }
     });
     pendingSaveRef.current = save;
@@ -58,7 +59,7 @@ export function TextDiffTool({ initialDraft, workspace, onMutationError, flushRe
 
   const scheduleSave = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => { void persist(); }, debounceMs);
+    timerRef.current = setTimeout(() => { void persist().catch(() => undefined); }, debounceMs);
   }, [persist]);
 
   const updateDraft = useCallback((next: DraftContent) => {
@@ -73,7 +74,7 @@ export function TextDiffTool({ initialDraft, workspace, onMutationError, flushRe
     if (flushRef) flushRef.current = persist;
     return () => {
       if (flushRef?.current === persist) flushRef.current = null;
-      void persist();
+      void persist().catch(() => undefined);
     };
   }, [flushRef, persist]);
 
@@ -90,13 +91,13 @@ export function TextDiffTool({ initialDraft, workspace, onMutationError, flushRe
         <textarea aria-label="Original text" value={original} spellCheck={false}
           placeholder="Paste the original text…"
           onChange={(event) => updateDraft({ ...draftRef.current, originalText: event.target.value })}
-          onBlur={() => void persist()} {...originalEditing} />
+          onBlur={() => void persist().catch(() => undefined)} {...originalEditing} />
       </label>
       <label>Changed text
         <textarea aria-label="Changed text" value={changed} spellCheck={false}
           placeholder="Paste the changed text…"
           onChange={(event) => updateDraft({ ...draftRef.current, changedText: event.target.value })}
-          onBlur={() => void persist()} {...changedEditing} />
+          onBlur={() => void persist().catch(() => undefined)} {...changedEditing} />
       </label>
     </div>
     <div className="text-diff-actions">

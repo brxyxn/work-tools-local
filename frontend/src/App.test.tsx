@@ -166,4 +166,19 @@ describe("Work Tools shell", () => {
     expect(original).toHaveValue("visible edit");
     expect(await screen.findByRole("alert")).toHaveTextContent("database is busy");
   });
+
+  test("keeps Text Diff active with edited input when its pre-switch flush fails", async () => {
+    const user = userEvent.setup();
+    const services = createMemoryServices();
+    services.workspace.saveTextDiffDraft = vi.fn().mockRejectedValue(new Error("database is busy"));
+    render(<App services={services} />);
+
+    const original = await screen.findByLabelText("Original text");
+    await user.type(original, "do not lose this edit");
+    await user.click(screen.getByRole("button", { name: "JSON Visualizer" }));
+
+    expect(screen.getByRole("heading", { name: "Text Diff" })).toBeVisible();
+    expect(screen.getByLabelText("Original text")).toHaveValue("do not lose this edit");
+    expect(screen.getByRole("alert")).toHaveTextContent("database is busy");
+  });
 });
