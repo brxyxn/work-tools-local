@@ -101,21 +101,21 @@ them with `gh stack view --json`.
 
 **Produces:** `PayloadService`, `WorkspaceService`, database repositories, startup hydration, and mockable frontend ports.
 
-- [ ] Write failing Go tests for first-run creation, schema versioning,
+- [x] Write failing Go tests for first-run creation, schema versioning,
   transactions, reopen persistence, migration rollback, foreign keys, and a
   corrupt database.
-- [ ] Implement the Application Support database path, connection pragmas,
+- [x] Implement the Application Support database path, connection pragmas,
   migration runner, integrity handling, and future pre-migration backup hook.
-- [ ] Add migrations for payloads, ordered tags, Text Diff draft, settings,
+- [x] Add migrations for payloads, ordered tags, Text Diff draft, settings,
   indexes, JSON validity constraints, and cascade behavior.
-- [ ] Implement database-first payload CRUD, batch transactions, selection,
+- [x] Implement database-first payload CRUD, batch transactions, selection,
   restore, Text Diff draft storage, and settings storage.
-- [ ] Register the Wails services and generate checked-in TypeScript bindings.
-- [ ] Add frontend adapters and in-memory test doubles; implement loading,
+- [x] Register the Wails services and generate checked-in TypeScript bindings.
+- [x] Add frontend adapters and in-memory test doubles; implement loading,
   mutation-error toasts, and the fatal database recovery screen.
-- [ ] Run `go test -race ./...`, `go vet ./...`, frontend tests, and the Wails
+- [x] Run `go test -race ./...`, `go vet ./...`, frontend tests, and the Wails
   arm64 build.
-- [ ] Commit the persistence layer, then run:
+- [x] Commit the persistence layer, then run:
 
   ```bash
   gh stack add migration/03-base64-pdf

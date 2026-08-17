@@ -3,6 +3,8 @@ import { IconCommand, IconMoon, IconSearch, IconSun } from "@tabler/icons-react"
 import { Command } from "cmdk";
 
 import { tools, type ToolID } from "./app/tools";
+import type { AppServices, RecoveryInfo } from "./services/types";
+import { wailsServices } from "./services/wails";
 
 type Theme = "light" | "dark";
 
@@ -10,10 +12,33 @@ function initialTheme(): Theme {
   return window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-function App() {
+interface AppProps {
+  services?: AppServices;
+}
+
+function DatabaseRecovery({ recovery }: { recovery: RecoveryInfo }) {
+  return (
+    <main className="recovery-screen">
+      <h1>Local data needs attention</h1>
+      <p>Work Tools left the database untouched because it could not be opened safely.</p>
+      <dl>
+        <div><dt>Details</dt><dd>{recovery.message}</dd></div>
+        <div><dt>Database</dt><dd>{recovery.databasePath}</dd></div>
+        <div><dt>Log</dt><dd>{recovery.logPath || "Log file unavailable"}</dd></div>
+      </dl>
+      <p>Make a copy of the database before attempting any repair.</p>
+    </main>
+  );
+}
+
+function App({ services = wailsServices }: AppProps) {
   const [activeToolID, setActiveToolID] = useState<ToolID>("text-diff");
   const [commandOpen, setCommandOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>(initialTheme);
+  const [loading, setLoading] = useState(true);
+  const [recovery, setRecovery] = useState<RecoveryInfo | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [mutationError, setMutationError] = useState<string | null>(null);
   const activeTool = useMemo(
     () => tools.find((tool) => tool.id === activeToolID) ?? tools[0],
     [activeToolID],
@@ -22,6 +47,31 @@ function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  useEffect(() => {
+    let cancelled = false;
+    services.workspace.load().then((result) => {
+      if (cancelled) return;
+      if (result.recovery) {
+        setRecovery(result.recovery);
+        setLoading(false);
+        return;
+      }
+      const settings = result.state?.settings ?? {};
+      const savedTool = settings.selected_tool;
+      if (typeof savedTool === "string" && tools.some((tool) => tool.id === savedTool)) {
+        setActiveToolID(savedTool as ToolID);
+      }
+      const savedTheme = settings.theme;
+      if (savedTheme === "light" || savedTheme === "dark") setTheme(savedTheme);
+      setLoading(false);
+    }).catch((error: unknown) => {
+      if (cancelled) return;
+      setLoadError(error instanceof Error ? error.message : "Unable to load the local workspace.");
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [services]);
 
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
@@ -35,10 +85,31 @@ function App() {
     return () => window.removeEventListener("keydown", handleShortcut);
   }, []);
 
-  const selectTool = (id: ToolID) => {
-    setActiveToolID(id);
-    setCommandOpen(false);
+  const selectTool = async (id: ToolID) => {
+    setMutationError(null);
+    try {
+      await services.workspace.saveSettings({ selected_tool: id });
+      setActiveToolID(id);
+      setCommandOpen(false);
+    } catch (error) {
+      setMutationError(error instanceof Error ? error.message : "Unable to save the selected tool.");
+    }
   };
+
+  const toggleTheme = async () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setMutationError(null);
+    try {
+      await services.workspace.saveSettings({ theme: next });
+      setTheme(next);
+    } catch (error) {
+      setMutationError(error instanceof Error ? error.message : "Unable to save the theme.");
+    }
+  };
+
+  if (loading) return <main className="loading-screen" aria-label="Loading workspace">Loading Work Tools…</main>;
+  if (recovery) return <DatabaseRecovery recovery={recovery} />;
+  if (loadError) throw new Error(loadError);
 
   return (
     <div className="app-shell">
@@ -64,7 +135,7 @@ function App() {
                 type="button"
                 key={tool.id}
                 aria-current={tool.id === activeToolID ? "page" : undefined}
-                onClick={() => selectTool(tool.id)}
+                onClick={() => void selectTool(tool.id)}
               >
                 <ToolIcon size={18} stroke={1.8} aria-hidden="true" />
                 {tool.label}
@@ -77,7 +148,7 @@ function App() {
           className="theme-toggle"
           type="button"
           aria-label={`Use ${theme === "dark" ? "light" : "dark"} theme`}
-          onClick={() => setTheme((current) => (current === "dark" ? "light" : "dark"))}
+          onClick={() => void toggleTheme()}
         >
           {theme === "dark" ? <IconSun size={17} /> : <IconMoon size={17} />}
           {theme === "dark" ? "Light theme" : "Dark theme"}
@@ -85,6 +156,7 @@ function App() {
       </aside>
 
       <main className="workspace">
+        {mutationError && <div className="mutation-error" role="alert">{mutationError}</div>}
         <header className="workspace-header">
           <div>
             <p className="eyebrow">Utility</p>
@@ -114,7 +186,7 @@ function App() {
             <Command.List>
               <Command.Empty>No matching tools.</Command.Empty>
               {tools.map((tool) => (
-                <Command.Item key={tool.id} value={tool.label} onSelect={() => selectTool(tool.id)}>
+                <Command.Item key={tool.id} value={tool.label} onSelect={() => void selectTool(tool.id)}>
                   <tool.icon size={18} aria-hidden="true" />
                   <span>{tool.label}</span>
                 </Command.Item>
