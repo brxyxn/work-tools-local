@@ -11,51 +11,59 @@ type DraftContent = Pick<TextDiffDraft, "originalText" | "changedText" | "viewMo
 
 const debounceMs = 350;
 
-function draftKey(draft: DraftContent) {
-  return JSON.stringify([draft.originalText, draft.changedText, draft.viewMode]);
-}
-
 export interface TextDiffToolProps {
   initialDraft: TextDiffDraft;
   workspace: WorkspacePort;
-  onMutationError: (message: string) => void;
+  onMutationError: (message: string | null) => void;
+  onDraftChange?: (draft: TextDiffDraft) => void;
   flushRef?: MutableRefObject<(() => Promise<void>) | null>;
 }
 
-export function TextDiffTool({ initialDraft, workspace, onMutationError, flushRef }: TextDiffToolProps) {
+export function TextDiffTool({ initialDraft, workspace, onMutationError, onDraftChange, flushRef }: TextDiffToolProps) {
   const initialViewMode: ViewMode = initialDraft.viewMode === "unified" ? "unified" : "split";
   const initialContent: DraftContent = { originalText: initialDraft.originalText, changedText: initialDraft.changedText, viewMode: initialViewMode };
   const [original, setOriginal] = useState(initialContent.originalText);
   const [changed, setChanged] = useState(initialContent.changedText);
   const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode);
   const draftRef = useRef<DraftContent>(initialContent);
-  const savedKeyRef = useRef(draftKey(initialContent));
+  const revisionRef = useRef(0);
+  const savedRevisionRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingSaveRef = useRef<Promise<void>>(Promise.resolve());
+  const drainRef = useRef<Promise<void> | null>(null);
+
+  const drainSaves = useCallback(async () => {
+    while (savedRevisionRef.current < revisionRef.current) {
+      const revision = revisionRef.current;
+      const snapshot = draftRef.current;
+      try {
+        await workspace.saveTextDiffDraft({ ...snapshot, updatedAt: Date.now() });
+        savedRevisionRef.current = revision;
+        onMutationError(null);
+      } catch (error) {
+        onMutationError(error instanceof Error ? error.message : "Unable to save the Text Diff draft.");
+        if (revision === revisionRef.current) throw error;
+      }
+    }
+  }, [draftRef, onMutationError, workspace]);
 
   const persist = useCallback(async () => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-    const snapshot = draftRef.current;
-    const key = draftKey(snapshot);
-    if (key === savedKeyRef.current) return;
-    const previousSave = pendingSaveRef.current;
-    const save = previousSave.catch(() => undefined).then(async () => {
-      // A newer flush supersedes this queued snapshot before it reaches SQLite.
-      if (key !== draftKey(draftRef.current)) return;
-      try {
-        await workspace.saveTextDiffDraft({ ...snapshot, updatedAt: Date.now() });
-        savedKeyRef.current = key;
-      } catch (error) {
-        onMutationError(error instanceof Error ? error.message : "Unable to save the Text Diff draft.");
-        throw error;
+    while (savedRevisionRef.current < revisionRef.current) {
+      let drain = drainRef.current;
+      if (!drain) {
+        drain = drainSaves();
+        drainRef.current = drain;
+        drain.then(
+          () => { if (drainRef.current === drain) drainRef.current = null; },
+          () => { if (drainRef.current === drain) drainRef.current = null; },
+        );
       }
-    });
-    pendingSaveRef.current = save;
-    await save;
-  }, [draftRef, onMutationError, workspace]);
+      await drain;
+    }
+  }, [drainSaves]);
 
   const scheduleSave = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -64,11 +72,13 @@ export function TextDiffTool({ initialDraft, workspace, onMutationError, flushRe
 
   const updateDraft = useCallback((next: DraftContent) => {
     draftRef.current = next;
+    revisionRef.current += 1;
     setOriginal(next.originalText);
     setChanged(next.changedText);
     setViewMode(next.viewMode as ViewMode);
+    onDraftChange?.({ ...next, updatedAt: Date.now() });
     scheduleSave();
-  }, [draftRef, scheduleSave, setChanged, setOriginal, setViewMode]);
+  }, [draftRef, onDraftChange, scheduleSave, setChanged, setOriginal, setViewMode]);
 
   useEffect(() => {
     if (flushRef) flushRef.current = persist;

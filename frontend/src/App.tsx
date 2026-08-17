@@ -180,6 +180,7 @@ function App({ services = wailsServices }: AppProps) {
               initialDraft={textDiffDraft}
               workspace={services.workspace}
               onMutationError={setMutationError}
+              onDraftChange={setTextDiffDraft}
               flushRef={textDiffFlushRef}
             />
           </section>

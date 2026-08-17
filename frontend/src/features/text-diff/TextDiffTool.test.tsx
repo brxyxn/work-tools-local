@@ -74,6 +74,43 @@ test("restores selection after Option-Shift line movement and Command deletion s
   expect(original.selectionEnd).toBe(0);
 });
 
+test("prevents boundary line movement without restoring a stale selection on the next edit", async () => {
+  const services = createMemoryServices();
+  render(
+    <TextDiffTool
+      initialDraft={{ originalText: "one\ntwo", changedText: "", viewMode: "split", updatedAt: 0 }}
+      workspace={services.workspace}
+      onMutationError={vi.fn()}
+    />,
+  );
+  const original = screen.getByLabelText("Original text") as HTMLTextAreaElement;
+
+  original.setSelectionRange(0, 3);
+  expect(fireEvent.keyDown(original, { key: "ArrowUp", altKey: true, shiftKey: true })).toBe(false);
+  original.setSelectionRange(4, 7);
+  fireEvent.change(original, { target: { value: "one\ntwo!" } });
+
+  await waitFor(() => expect(original).toHaveValue("one\ntwo!"));
+  expect(original.selectionStart).toBe(8);
+  expect(original.selectionEnd).toBe(8);
+});
+
+test("announces split diff sides and change meaning to assistive technology", () => {
+  const services = createMemoryServices();
+  render(
+    <TextDiffTool
+      initialDraft={{ originalText: "old", changedText: "new", viewMode: "split", updatedAt: 0 }}
+      workspace={services.workspace}
+      onMutationError={vi.fn()}
+    />,
+  );
+
+  expect(screen.getByRole("table", { name: "Side-by-side text diff" })).toBeVisible();
+  expect(screen.getByRole("row", { name: "Modified text" })).toBeVisible();
+  expect(screen.getByRole("cell", { name: "Original line 1, removed: old" })).toBeVisible();
+  expect(screen.getByRole("cell", { name: "Changed line 1, added: new" })).toBeVisible();
+});
+
 test("supports Command-Backspace line deletion", async () => {
   const services = createMemoryServices();
   render(
@@ -112,4 +149,66 @@ test("debounces rapid edits and persists only the latest draft", async () => {
   await vi.advanceTimersByTimeAsync(350);
   expect((await services.workspace.load()).state?.textDiffDraft).toMatchObject({ originalText: "latest", changedText: "", viewMode: "split" });
   vi.useRealTimers();
+});
+
+function createDeferredSave(services: ReturnType<typeof createMemoryServices>) {
+  const saveDraft = services.workspace.saveTextDiffDraft;
+  const pending: Array<{ draft: Parameters<typeof saveDraft>[0]; resolve: () => void }> = [];
+  services.workspace.saveTextDiffDraft = vi.fn((draft) => new Promise<void>((resolve) => {
+    pending.push({ draft, resolve: () => { void saveDraft(draft).then(resolve); } });
+  }));
+  return pending;
+}
+
+test("flush waits for an edit made during a slow save and persists the latest draft", async () => {
+  const services = createMemoryServices();
+  const pending = createDeferredSave(services);
+  const flushRef = { current: null as null | (() => Promise<void>) };
+  render(
+    <TextDiffTool
+      initialDraft={{ originalText: "", changedText: "", viewMode: "split", updatedAt: 0 }}
+      workspace={services.workspace}
+      onMutationError={vi.fn()}
+      flushRef={flushRef}
+    />,
+  );
+  const original = screen.getByLabelText("Original text");
+
+  fireEvent.change(original, { target: { value: "first" } });
+  let flushSettled = false;
+  const flush = flushRef.current!().then(() => { flushSettled = true; });
+  await waitFor(() => expect(pending).toHaveLength(1));
+  fireEvent.change(original, { target: { value: "latest" } });
+  pending[0].resolve();
+  await waitFor(() => expect(pending).toHaveLength(2));
+  expect(pending[1].draft.originalText).toBe("latest");
+  expect(flushSettled).toBe(false);
+  pending[1].resolve();
+  await flush;
+
+  expect((await services.workspace.load()).state?.textDiffDraft.originalText).toBe("latest");
+});
+
+test("coalesces overlapping blur and switch flushes into one draft write", async () => {
+  const services = createMemoryServices();
+  const pending = createDeferredSave(services);
+  const flushRef = { current: null as null | (() => Promise<void>) };
+  render(
+    <TextDiffTool
+      initialDraft={{ originalText: "", changedText: "", viewMode: "split", updatedAt: 0 }}
+      workspace={services.workspace}
+      onMutationError={vi.fn()}
+      flushRef={flushRef}
+    />,
+  );
+  const original = screen.getByLabelText("Original text");
+
+  fireEvent.change(original, { target: { value: "once" } });
+  fireEvent.blur(original);
+  const flush = flushRef.current!();
+  await waitFor(() => expect(pending).toHaveLength(1));
+  pending[0].resolve();
+  await flush;
+
+  expect(pending).toHaveLength(1);
 });

@@ -15,6 +15,12 @@
   --muted: #687384;
   --accent: #2d61d5;
   --accent-soft: #e8efff;
+  --diff-selected-fg: #fff;
+  --diff-selected-bg: #2d61d5;
+  --diff-highlight-added-fg: #075c39;
+  --diff-highlight-added-bg: #b9e2d0;
+  --diff-highlight-removed-fg: #8f1428;
+  --diff-highlight-removed-bg: #f5c5cb;
   --shadow: 0 18px 60px rgba(31, 42, 55, 0.12);
 }
 
@@ -30,6 +36,12 @@
   --muted: #99a4b4;
   --accent: #81a7ff;
   --accent-soft: rgba(72, 111, 202, 0.2);
+  --diff-selected-fg: #10151b;
+  --diff-selected-bg: #a8c3ff;
+  --diff-highlight-added-fg: #e3fff0;
+  --diff-highlight-added-bg: #1f493c;
+  --diff-highlight-removed-fg: #ffe8eb;
+  --diff-highlight-removed-bg: #592c32;
   --shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
 }
 
@@ -80,23 +92,24 @@ kbd { display: flex; align-items: center; gap: 1px; padding: 2px 5px; border: 1p
 .text-diff-actions, .diff-view-toggle { display: flex; align-items: center; gap: 7px; }
 .text-diff-actions button, .diff-view-toggle button { height: 32px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; color: inherit; background: var(--surface-solid); cursor: pointer; font-size: 12px; }
 .text-diff-actions button:disabled { cursor: default; opacity: .45; }
-.diff-view-toggle button[aria-pressed="true"] { border-color: transparent; color: white; background: var(--accent); }
+.diff-view-toggle button[aria-pressed="true"] { border-color: transparent; color: var(--diff-selected-fg); background: var(--diff-selected-bg); }
 .diff-stats { display: flex; gap: 7px; margin-left: auto; font-size: 12px; font-weight: 700; }
 .diff-stats span:first-child { color: #18794e; }
 .diff-stats span:last-child { color: #b92336; }
 .diff-empty-state { display: grid; min-height: 0; flex: 1; place-items: center; border: 1px dashed var(--border); border-radius: 10px; color: var(--muted); font-size: 12px; }
-.diff-table { display: grid; min-height: 0; flex: 1; overflow: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-solid); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; line-height: 1.55; }
-.diff-table-split { grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr); }
-.diff-table-unified { grid-template-columns: auto auto 24px minmax(0, 1fr); }
+.diff-table { min-height: 0; flex: 1; overflow: auto; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-solid); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; line-height: 1.55; }
+.diff-row { display: grid; }
+.diff-table-split .diff-row { grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr); }
+.diff-table-unified .diff-row { grid-template-columns: auto auto 24px minmax(0, 1fr); }
 .diff-line-number { min-width: 34px; padding: 3px 8px; border-right: 1px solid var(--border); color: var(--muted); text-align: right; user-select: none; }
 .diff-content { min-width: 0; padding: 3px 10px; white-space: pre-wrap; overflow-wrap: anywhere; }
-.diff-table-split .diff-content:nth-child(4n + 2) { border-right: 1px solid var(--border); }
+.diff-table-split .diff-content:nth-child(2) { border-right: 1px solid var(--border); }
 .diff-sign { padding: 3px 8px; color: var(--muted); text-align: center; user-select: none; }
 .diff-added { background: rgba(34, 160, 107, .10); }
 .diff-removed { background: rgba(209, 56, 72, .10); }
 .diff-placeholder { background: color-mix(in srgb, var(--background) 60%, transparent); }
-.diff-highlight-added { border-radius: 2px; color: #126b42; background: rgba(34, 160, 107, .28); }
-.diff-highlight-removed { border-radius: 2px; color: #a21f32; background: rgba(209, 56, 72, .28); }
+.diff-highlight-added { border-radius: 2px; color: var(--diff-highlight-added-fg); background: var(--diff-highlight-added-bg); }
+.diff-highlight-removed { border-radius: 2px; color: var(--diff-highlight-removed-fg); background: var(--diff-highlight-removed-bg); }
 .tool-actions { display: flex; flex-wrap: wrap; gap: 7px; }
 .tool-actions button { display: inline-flex; height: 34px; align-items: center; gap: 6px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; color: inherit; background: var(--surface-solid); cursor: pointer; font-size: 12px; }
 .tool-actions button:disabled { cursor: default; opacity: .45; }

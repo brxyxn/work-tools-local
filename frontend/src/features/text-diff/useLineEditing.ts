@@ -25,6 +25,7 @@ export function useLineEditing(value: string, onChange: (value: string) => void)
     }
     if (!next) return;
     event.preventDefault();
+    if (next === state) return;
     pendingSelection.current = { start: next.selectionStart, end: next.selectionEnd };
     onChange(next.value);
   };
