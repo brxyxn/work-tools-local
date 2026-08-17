@@ -4,7 +4,7 @@ import "@pdfslick/react/dist/pdf_viewer.css";
 
 export function PdfPreview({ url }: { url: string }) {
   const { viewerRef, usePDFSlickStore, PDFSlickViewer, store } = usePDFSlick(url, {
-    scaleValue: "page-fit",
+    scaleValue: "page-width",
   });
 
   useEffect(() => () => {
