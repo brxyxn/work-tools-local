@@ -68,7 +68,13 @@ func run() error {
 		})
 	}
 
-	app.Window.NewWithOptions(application.WebviewWindowOptions{
+	app.Window.NewWithOptions(mainWindowOptions())
+
+	return app.Run()
+}
+
+func mainWindowOptions() application.WebviewWindowOptions {
+	return application.WebviewWindowOptions{
 		Name:      "main",
 		Title:     "Work Tools",
 		Width:     1280,
@@ -78,14 +84,12 @@ func run() error {
 		Mac: application.MacWindow{
 			InvisibleTitleBarHeight: 42,
 			Backdrop:                application.MacBackdropTranslucent,
-			TitleBar:                application.MacTitleBarHiddenInset,
+			TitleBar:                application.MacTitleBarHidden,
 			TabbingMode:             application.MacWindowTabbingModeDisallowed,
 		},
 		BackgroundColour: application.NewRGB(237, 241, 244),
 		URL:              "/",
-	})
-
-	return app.Run()
+	}
 }
 
 func configureLogging() (string, func()) {
