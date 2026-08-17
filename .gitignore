@@ -1,0 +1,6 @@
+.DS_Store
+.task/
+bin/
+frontend/dist/
+frontend/node_modules/
+*.log

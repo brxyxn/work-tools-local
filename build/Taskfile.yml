@@ -1,0 +1,88 @@
+version: '3'
+
+tasks:
+  go:mod:tidy:
+    summary: Tidies Go module dependencies
+    internal: true
+    run: once
+    cmds:
+      - go mod tidy
+
+  install:frontend:deps:
+    summary: Installs pinned frontend dependencies with pnpm
+    internal: true
+    run: once
+    dir: frontend
+    sources:
+      - package.json
+      - pnpm-lock.yaml
+    generates:
+      - node_modules
+    preconditions:
+      - sh: pnpm --version
+        msg: "pnpm is required"
+    cmds:
+      - pnpm install --frozen-lockfile
+
+  generate:bindings:
+    summary: Generates Wails TypeScript bindings
+    internal: true
+    run: once
+    deps:
+      - task: go:mod:tidy
+    sources:
+      - "**/*.go"
+      - go.mod
+      - go.sum
+    generates:
+      - frontend/bindings/**/*
+    cmds:
+      - wails3 generate bindings -f '{{.BUILD_FLAGS}}' -clean=true -ts -i
+
+  build:frontend:
+    summary: Builds the React frontend
+    internal: true
+    run: once
+    dir: frontend
+    sources:
+      - "**/*"
+      - exclude: node_modules/**/*
+      - exclude: dist/**/*
+    generates:
+      - dist/**/*
+    deps:
+      - task: install:frontend:deps
+      - task: generate:bindings
+        vars:
+          BUILD_FLAGS:
+            ref: .BUILD_FLAGS
+    cmds:
+      - pnpm run {{if eq .DEV "true"}}build:dev{{else}}build{{end}}
+
+  generate:icons:
+    summary: Generates macOS icons
+    internal: true
+    run: once
+    dir: build
+    sources:
+      - appicon.png
+      - appicon.icon
+    generates:
+      - darwin/icons.icns
+    cmds:
+      # Wails beta.9 always emits an ICO; keep that required by-product out of the macOS-only source tree.
+      - wails3 generate icons -input appicon.png -macfilename darwin/icons.icns -windowsfilename /tmp/work-tools-local-wails-icon.ico -iconcomposerinput appicon.icon -macassetdir darwin
+
+  dev:frontend:
+    summary: Runs the frontend development server
+    deps:
+      - task: install:frontend:deps
+    dir: frontend
+    cmds:
+      - pnpm dev --port {{.VITE_PORT}} --strictPort
+
+  update:build-assets:
+    summary: Regenerates build metadata from build/config.yml
+    dir: build
+    cmds:
+      - wails3 update build-assets -name "{{.APP_NAME}}" -binaryname "{{.APP_NAME}}" -config config.yml -dir .

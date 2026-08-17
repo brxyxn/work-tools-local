@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  color: #18202b;
+  background: #edf1f4;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --background: #edf1f4;
+  --surface: rgba(255, 255, 255, 0.76);
+  --surface-solid: #fff;
+  --sidebar: rgba(246, 248, 250, 0.88);
+  --border: rgba(24, 32, 43, 0.1);
+  --muted: #687384;
+  --accent: #2d61d5;
+  --accent-soft: #e8efff;
+  --shadow: 0 18px 60px rgba(31, 42, 55, 0.12);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  color: #edf1f6;
+  background: #11151b;
+  --background: #11151b;
+  --surface: rgba(29, 35, 44, 0.82);
+  --surface-solid: #1b212a;
+  --sidebar: rgba(21, 26, 33, 0.9);
+  --border: rgba(235, 240, 247, 0.1);
+  --muted: #99a4b4;
+  --accent: #81a7ff;
+  --accent-soft: rgba(72, 111, 202, 0.2);
+  --shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
+}
+
+* { box-sizing: border-box; }
+html, body, #root { min-height: 100%; margin: 0; }
+body { min-width: 760px; min-height: 520px; background: var(--background); }
+button, input { font: inherit; }
+button { color: inherit; }
+
+.app-shell { min-height: 100vh; display: grid; grid-template-columns: 244px minmax(0, 1fr); }
+.sidebar { display: flex; min-height: 100vh; flex-direction: column; gap: 20px; padding: 52px 14px 18px; border-right: 1px solid var(--border); background: var(--sidebar); backdrop-filter: blur(24px); }
+.brand { display: flex; align-items: center; gap: 11px; padding: 0 8px; }
+.brand-mark { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 9px; color: white; background: linear-gradient(145deg, #386fe7, #254fb0); font-weight: 750; box-shadow: 0 8px 18px rgba(45, 97, 213, .24); }
+.brand strong, .brand small { display: block; }
+.brand strong { font-size: 14px; letter-spacing: -0.01em; }
+.brand small { margin-top: 2px; color: var(--muted); font-size: 11px; }
+
+.command-trigger, .theme-toggle, .tool-navigation-item { border: 0; background: transparent; cursor: pointer; }
+.command-trigger { display: flex; height: 36px; align-items: center; gap: 8px; padding: 0 9px; border: 1px solid var(--border); border-radius: 9px; color: var(--muted); background: var(--surface); box-shadow: 0 1px 3px rgba(31, 42, 55, .04); }
+.command-trigger span { flex: 1; text-align: left; font-size: 12px; }
+kbd { display: flex; align-items: center; gap: 1px; padding: 2px 5px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface-solid); font-size: 10px; }
+
+.tool-navigation { display: flex; flex-direction: column; gap: 4px; }
+.navigation-label { padding: 0 10px 6px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+.tool-navigation-item { display: flex; height: 38px; align-items: center; gap: 9px; padding: 0 10px; border-radius: 9px; color: var(--muted); font-size: 13px; font-weight: 540; text-align: left; transition: background 120ms ease, color 120ms ease; }
+.tool-navigation-item:hover { color: inherit; background: var(--surface); }
+.tool-navigation-item[aria-current="page"] { color: var(--accent); background: var(--accent-soft); }
+.theme-toggle { display: flex; align-items: center; gap: 8px; margin-top: auto; padding: 9px 10px; border-radius: 9px; color: var(--muted); font-size: 12px; }
+.theme-toggle:hover { color: inherit; background: var(--surface); }
+
+.workspace { min-width: 0; padding: 74px 48px 48px; }
+.workspace-header { display: flex; align-items: flex-end; justify-content: space-between; margin: 0 auto 24px; max-width: 1060px; }
+.eyebrow { margin: 0 0 7px !important; color: var(--accent) !important; font-size: 10px !important; font-weight: 750; letter-spacing: .12em; text-transform: uppercase; }
+.workspace-header h1 { margin: 0; font-size: 28px; letter-spacing: -.035em; }
+.workspace-header p { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+.workspace-card { display: grid; min-height: 440px; max-width: 1060px; margin: 0 auto; place-items: center; align-content: center; gap: 14px; border: 1px solid var(--border); border-radius: 15px; color: var(--muted); background: var(--surface); box-shadow: var(--shadow); }
+.workspace-card p { margin: 0; font-size: 13px; }
+
+.command-backdrop { position: fixed; inset: 0; z-index: 20; display: grid; place-items: start center; padding-top: 18vh; background: rgba(9, 13, 19, .28); backdrop-filter: blur(4px); }
+.command-dialog { width: min(500px, calc(100vw - 40px)); overflow: hidden; border: 1px solid var(--border); border-radius: 13px; background: var(--surface-solid); box-shadow: 0 28px 90px rgba(0, 0, 0, .28); }
+.command-input-row { display: flex; align-items: center; gap: 10px; padding: 0 15px; border-bottom: 1px solid var(--border); color: var(--muted); }
+.command-input-row input { width: 100%; height: 48px; border: 0; outline: 0; color: inherit; background: transparent; }
+[cmdk-list] { max-height: 290px; padding: 7px; overflow: auto; }
+[cmdk-item] { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+[cmdk-item][data-selected="true"] { color: var(--accent); background: var(--accent-soft); }
+[cmdk-empty] { padding: 24px; color: var(--muted); font-size: 13px; text-align: center; }
+
+.fatal-error { display: grid; min-height: 100vh; place-items: center; align-content: center; gap: 12px; padding: 32px; text-align: center; }
+.fatal-error h1, .fatal-error p { margin: 0; }
+.fatal-error h1 { font-size: 22px; }
+.fatal-error p { max-width: 460px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+.fatal-error button { margin-top: 8px; padding: 9px 14px; border: 0; border-radius: 9px; color: white; background: var(--accent); cursor: pointer; }
+
+@media (max-width: 900px) {
+  .app-shell { grid-template-columns: 210px minmax(0, 1fr); }
+  .workspace { padding-inline: 28px; }
+}
