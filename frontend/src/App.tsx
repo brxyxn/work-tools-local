@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { IconCommand, IconMoon, IconSearch, IconSun } from "@tabler/icons-react";
 import { Command } from "cmdk";
 
@@ -6,6 +6,8 @@ import { tools, type ToolID } from "./app/tools";
 import type { AppServices, RecoveryInfo } from "./services/types";
 import { wailsServices } from "./services/wails";
 import { Base64PdfTool } from "./tools/base64-pdf/Base64PdfTool";
+import { TextDiffTool } from "./features/text-diff/TextDiffTool";
+import type { TextDiffDraft } from "../bindings/github.com/brxyxn/work-tools-local/internal/storage/models";
 
 type Theme = "light" | "dark";
 
@@ -40,6 +42,10 @@ function App({ services = wailsServices }: AppProps) {
   const [recovery, setRecovery] = useState<RecoveryInfo | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [mutationError, setMutationError] = useState<string | null>(null);
+  const [textDiffDraft, setTextDiffDraft] = useState<TextDiffDraft>({
+    originalText: "", changedText: "", viewMode: "split", updatedAt: 0,
+  });
+  const textDiffFlushRef = useRef<(() => Promise<void>) | null>(null);
   const activeTool = useMemo(
     () => tools.find((tool) => tool.id === activeToolID) ?? tools[0],
     [activeToolID],
@@ -59,6 +65,8 @@ function App({ services = wailsServices }: AppProps) {
         return;
       }
       const settings = result.state?.settings ?? {};
+      const savedDraft = result.state?.textDiffDraft;
+      if (savedDraft) setTextDiffDraft(savedDraft);
       const savedTool = settings.selected_tool;
       if (typeof savedTool === "string" && tools.some((tool) => tool.id === savedTool)) {
         setActiveToolID(savedTool as ToolID);
@@ -89,6 +97,7 @@ function App({ services = wailsServices }: AppProps) {
   const selectTool = async (id: ToolID) => {
     setMutationError(null);
     try {
+      if (activeToolID === "text-diff" && id !== "text-diff") await textDiffFlushRef.current?.();
       await services.workspace.saveSettings({ selected_tool: id });
       setActiveToolID(id);
       setCommandOpen(false);
@@ -165,7 +174,16 @@ function App({ services = wailsServices }: AppProps) {
             <p>{activeTool.description}</p>
           </div>
         </header>
-        {activeToolID === "base64-pdf" ? (
+        {activeToolID === "text-diff" ? (
+          <section className="workspace-card tool-workspace" aria-label="Text Diff workspace">
+            <TextDiffTool
+              initialDraft={textDiffDraft}
+              workspace={services.workspace}
+              onMutationError={setMutationError}
+              flushRef={textDiffFlushRef}
+            />
+          </section>
+        ) : activeToolID === "base64-pdf" ? (
           <section className="workspace-card tool-workspace" aria-label="Base64 → PDF workspace">
             <Base64PdfTool files={services.files} />
           </section>

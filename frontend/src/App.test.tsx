@@ -120,4 +120,50 @@ describe("Work Tools shell", () => {
     expect(screen.getByRole("heading", { name: "Text Diff" })).toBeVisible();
     expect(screen.getByRole("alert")).toHaveTextContent("database is busy");
   });
+
+  test("restores and saves Text Diff drafts, flushing edits before a tool switch", async () => {
+    const user = userEvent.setup();
+    const services = createMemoryServices({
+      state: {
+        payloads: [],
+        selectedPayloadId: null,
+        textDiffDraft: { originalText: "before", changedText: "after", viewMode: "unified", updatedAt: 1 },
+        settings: {},
+      },
+    });
+    const firstLaunch = render(<App services={services} />);
+
+    const original = await screen.findByLabelText("Original text");
+    expect(original).toHaveValue("before");
+    expect(screen.getByRole("button", { name: "Unified" })).toHaveAttribute("aria-pressed", "true");
+
+    await user.clear(original);
+    await user.type(original, "edited before switch");
+    await user.click(screen.getByRole("button", { name: "JSON Visualizer" }));
+
+    expect((await services.workspace.load()).state?.textDiffDraft).toMatchObject({
+      originalText: "edited before switch",
+      changedText: "after",
+      viewMode: "unified",
+    });
+
+    firstLaunch.unmount();
+    render(<App services={services} />);
+    await user.click(await screen.findByRole("button", { name: "Text Diff" }));
+    expect(await screen.findByLabelText("Original text")).toHaveValue("edited before switch");
+  });
+
+  test("keeps edited Text Diff input visible and reports a failed draft write", async () => {
+    const user = userEvent.setup();
+    const services = createMemoryServices();
+    services.workspace.saveTextDiffDraft = vi.fn().mockRejectedValue(new Error("database is busy"));
+    render(<App services={services} />);
+
+    const original = await screen.findByLabelText("Original text");
+    await user.type(original, "visible edit");
+    fireEvent.blur(original);
+
+    expect(original).toHaveValue("visible edit");
+    expect(await screen.findByRole("alert")).toHaveTextContent("database is busy");
+  });
 });
