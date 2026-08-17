@@ -40,7 +40,7 @@ button, input { font: inherit; }
 button { color: inherit; }
 
 .app-shell { display: grid; height: 100vh; min-height: 520px; grid-template-columns: 244px minmax(0, 1fr); overflow: hidden; }
-.sidebar { display: flex; height: 100%; min-height: 0; flex-direction: column; gap: 20px; padding: 52px 14px 18px; overflow: hidden; border-right: 1px solid var(--border); background: var(--sidebar); backdrop-filter: blur(24px); }
+.app-sidebar { display: flex; height: 100%; min-height: 0; flex-direction: column; gap: 20px; padding: 52px 14px 18px; overflow: hidden; border-right: 1px solid var(--border); background: var(--sidebar); backdrop-filter: blur(24px); }
 .brand { display: flex; align-items: center; gap: 11px; padding: 0 8px; }
 .brand-mark { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 9px; color: white; background: linear-gradient(145deg, #386fe7, #254fb0); font-weight: 750; box-shadow: 0 8px 18px rgba(45, 97, 213, .24); }
 .brand strong, .brand small { display: block; }

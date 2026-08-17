@@ -12,6 +12,16 @@ vi.mock("@wailsio/runtime", () => ({
 }));
 
 describe("Work Tools shell", () => {
+  test("keeps the app sidebar outside third-party sidebar selectors", async () => {
+    render(<App services={createMemoryServices()} />);
+
+    const navigation = await screen.findByRole("navigation", { name: "Tools" });
+    const sidebar = navigation.closest("aside");
+
+    expect(sidebar).toHaveClass("app-sidebar");
+    expect(sidebar).not.toHaveClass("sidebar");
+  });
+
   test("navigation exposes exactly the three implemented tools", async () => {
     render(<App services={createMemoryServices()} />);
 

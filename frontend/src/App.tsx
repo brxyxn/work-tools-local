@@ -114,7 +114,7 @@ function App({ services = wailsServices }: AppProps) {
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
+      <aside className="app-sidebar">
         <div className="brand">
           <span className="brand-mark" aria-hidden="true">W</span>
           <span><strong>Work Tools</strong><small>Local utilities</small></span>
