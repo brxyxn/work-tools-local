@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test, vi } from "vitest";
 
@@ -119,5 +119,97 @@ describe("Work Tools shell", () => {
 
     expect(screen.getByRole("heading", { name: "Text Diff" })).toBeVisible();
     expect(screen.getByRole("alert")).toHaveTextContent("database is busy");
+  });
+
+  test("restores and saves Text Diff drafts, flushing edits before a tool switch", async () => {
+    const user = userEvent.setup();
+    const services = createMemoryServices({
+      state: {
+        payloads: [],
+        selectedPayloadId: null,
+        textDiffDraft: { originalText: "before", changedText: "after", viewMode: "unified", updatedAt: 1 },
+        settings: {},
+      },
+    });
+    const firstLaunch = render(<App services={services} />);
+
+    const original = await screen.findByLabelText("Original text");
+    expect(original).toHaveValue("before");
+    expect(screen.getByRole("button", { name: "Unified" })).toHaveAttribute("aria-pressed", "true");
+
+    await user.clear(original);
+    await user.type(original, "edited before switch");
+    await user.click(screen.getByRole("button", { name: "JSON Visualizer" }));
+
+    expect((await services.workspace.load()).state?.textDiffDraft).toMatchObject({
+      originalText: "edited before switch",
+      changedText: "after",
+      viewMode: "unified",
+    });
+
+    firstLaunch.unmount();
+    render(<App services={services} />);
+    await user.click(await screen.findByRole("button", { name: "Text Diff" }));
+    expect(await screen.findByLabelText("Original text")).toHaveValue("edited before switch");
+  });
+
+  test("keeps edited Text Diff input visible and reports a failed draft write", async () => {
+    const user = userEvent.setup();
+    const services = createMemoryServices();
+    services.workspace.saveTextDiffDraft = vi.fn().mockRejectedValue(new Error("database is busy"));
+    render(<App services={services} />);
+
+    const original = await screen.findByLabelText("Original text");
+    await user.type(original, "visible edit");
+    fireEvent.blur(original);
+
+    expect(original).toHaveValue("visible edit");
+    expect(await screen.findByRole("alert")).toHaveTextContent("database is busy");
+  });
+
+  test("keeps Text Diff active with edited input when its pre-switch flush fails", async () => {
+    const user = userEvent.setup();
+    const services = createMemoryServices();
+    services.workspace.saveTextDiffDraft = vi.fn().mockRejectedValue(new Error("database is busy"));
+    render(<App services={services} />);
+
+    const original = await screen.findByLabelText("Original text");
+    await user.type(original, "do not lose this edit");
+    await user.click(screen.getByRole("button", { name: "JSON Visualizer" }));
+
+    expect(screen.getByRole("heading", { name: "Text Diff" })).toBeVisible();
+    expect(screen.getByLabelText("Original text")).toHaveValue("do not lose this edit");
+    expect(screen.getByRole("alert")).toHaveTextContent("database is busy");
+  });
+
+  test("keeps the current Text Diff draft when switching away and back in one session", async () => {
+    const user = userEvent.setup();
+    const services = createMemoryServices();
+    render(<App services={services} />);
+
+    const original = await screen.findByLabelText("Original text");
+    await user.type(original, "current session draft");
+    await user.click(screen.getByRole("button", { name: "JSON Visualizer" }));
+    await user.click(screen.getByRole("button", { name: "Text Diff" }));
+
+    expect(await screen.findByLabelText("Original text")).toHaveValue("current session draft");
+  });
+
+  test("clears a draft-save error after a later successful retry", async () => {
+    const user = userEvent.setup();
+    const services = createMemoryServices();
+    const saveDraft = services.workspace.saveTextDiffDraft;
+    services.workspace.saveTextDiffDraft = vi.fn()
+      .mockRejectedValueOnce(new Error("database is busy"))
+      .mockImplementation(saveDraft);
+    render(<App services={services} />);
+
+    const original = await screen.findByLabelText("Original text");
+    await user.type(original, "retry me");
+    fireEvent.blur(original);
+    expect(await screen.findByRole("alert")).toHaveTextContent("database is busy");
+
+    fireEvent.blur(original);
+    await waitFor(() => expect(screen.queryByRole("alert")).not.toBeInTheDocument());
   });
 });
