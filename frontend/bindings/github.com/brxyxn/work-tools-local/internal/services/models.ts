@@ -5,10 +5,21 @@
 // @ts-ignore: Unused imports
 import * as storage$0 from "../storage/models.js";
 
+export interface OpenTextResult {
+    "cancelled": boolean;
+    "name"?: string;
+    "text"?: string;
+}
+
 export interface RecoveryInfo {
     "message": string;
     "databasePath": string;
     "logPath": string;
+}
+
+export interface SaveResult {
+    "cancelled": boolean;
+    "path"?: string;
 }
 
 export interface WorkspaceLoadResult {

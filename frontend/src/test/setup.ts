@@ -10,6 +10,8 @@ class TestResizeObserver implements ResizeObserver {
 
 vi.stubGlobal("ResizeObserver", TestResizeObserver);
 Element.prototype.scrollIntoView = vi.fn();
+URL.createObjectURL = vi.fn(() => "blob:work-tools-test");
+URL.revokeObjectURL = vi.fn();
 
 afterEach(() => {
   cleanup();

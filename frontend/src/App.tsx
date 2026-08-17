@@ -5,6 +5,7 @@ import { Command } from "cmdk";
 import { tools, type ToolID } from "./app/tools";
 import type { AppServices, RecoveryInfo } from "./services/types";
 import { wailsServices } from "./services/wails";
+import { Base64PdfTool } from "./tools/base64-pdf/Base64PdfTool";
 
 type Theme = "light" | "dark";
 
@@ -164,10 +165,16 @@ function App({ services = wailsServices }: AppProps) {
             <p>{activeTool.description}</p>
           </div>
         </header>
-        <section className="workspace-card" aria-label={`${activeTool.label} workspace`}>
-          <activeTool.icon size={30} stroke={1.6} aria-hidden="true" />
-          <p>{activeTool.label} is ready for its migration layer.</p>
-        </section>
+        {activeToolID === "base64-pdf" ? (
+          <section className="workspace-card tool-workspace" aria-label="Base64 → PDF workspace">
+            <Base64PdfTool files={services.files} />
+          </section>
+        ) : (
+          <section className="workspace-card" aria-label={`${activeTool.label} workspace`}>
+            <activeTool.icon size={30} stroke={1.6} aria-hidden="true" />
+            <p>{activeTool.label} is ready for its migration layer.</p>
+          </section>
+        )}
       </main>
 
       {commandOpen && (

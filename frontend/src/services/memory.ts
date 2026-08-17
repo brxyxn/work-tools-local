@@ -83,5 +83,9 @@ export function createMemoryServices(options: MemoryOptions = {}): AppServices {
         state.selectedPayloadId = id;
       },
     },
+    files: {
+      openBase64TextFile: async () => ({ cancelled: true }),
+      saveDecodedPDF: async () => ({ cancelled: true }),
+    },
   };
 }

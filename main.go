@@ -42,6 +42,7 @@ func run() error {
 			LogPath:      logPath,
 		}
 	}
+	fileDialogs := &wailsFileDialogs{}
 
 	app := application.New(application.Options{
 		Name:        "Work Tools",
@@ -49,6 +50,7 @@ func run() error {
 		Services: []application.Service{
 			application.NewService(services.NewPayloadService(store)),
 			application.NewService(services.NewWorkspaceService(store, recovery)),
+			application.NewService(services.NewFileService(fileDialogs)),
 		},
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),
@@ -57,6 +59,7 @@ func run() error {
 			ApplicationShouldTerminateAfterLastWindowClosed: true,
 		},
 	})
+	fileDialogs.setManager(app.Dialog)
 	if store != nil {
 		app.OnShutdown(func() {
 			if err := store.Close(); err != nil {

@@ -16,9 +16,15 @@ export interface PayloadPort {
   select(id: string | null): Promise<void>;
 }
 
+export interface FilePort {
+  openBase64TextFile(): Promise<ServiceModels.OpenTextResult>;
+  saveDecodedPDF(defaultName: string, bytes: Uint8Array<ArrayBuffer>): Promise<ServiceModels.SaveResult>;
+}
+
 export interface AppServices {
   workspace: WorkspacePort;
   payloads: PayloadPort;
+  files: FilePort;
 }
 
 export type WorkspaceState = StorageModels.WorkspaceState;

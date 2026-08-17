@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@pdfslick/core@4.0.2': 9bc55624d1353aea6c52d54d50e142324663a4dda955e059fe2134905e6199e8
+
 importers:
 
   .:
@@ -3189,7 +3192,7 @@ snapshots:
 
   '@oxc-project/types@0.122.0': {}
 
-  '@pdfslick/core@4.0.2(@types/react@19.2.17)(react@19.2.7)(use-sync-external-store@1.6.0(react@19.2.7))':
+  '@pdfslick/core@4.0.2(patch_hash=9bc55624d1353aea6c52d54d50e142324663a4dda955e059fe2134905e6199e8)(@types/react@19.2.17)(react@19.2.7)(use-sync-external-store@1.6.0(react@19.2.7))':
     dependencies:
       pdfjs-dist: 6.2.108
       zustand: 5.0.14(@types/react@19.2.17)(react@19.2.7)(use-sync-external-store@1.6.0(react@19.2.7))
@@ -3201,7 +3204,7 @@ snapshots:
 
   '@pdfslick/react@4.0.0(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)':
     dependencies:
-      '@pdfslick/core': 4.0.2(@types/react@19.2.17)(react@19.2.7)(use-sync-external-store@1.6.0(react@19.2.7))
+      '@pdfslick/core': 4.0.2(patch_hash=9bc55624d1353aea6c52d54d50e142324663a4dda955e059fe2134905e6199e8)(@types/react@19.2.17)(react@19.2.7)(use-sync-external-store@1.6.0(react@19.2.7))
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
       use-sync-external-store: 1.6.0(react@19.2.7)
