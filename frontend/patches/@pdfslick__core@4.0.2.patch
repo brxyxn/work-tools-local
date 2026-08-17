@@ -1,0 +1,93 @@
+diff --git a/dist/esm/PDFSlick.d.ts b/dist/esm/PDFSlick.d.ts
+index 6cc3ef7e2eb39e774e775e146a5abb0ded853bdc..c8e2092e0ffb0305c346bff64c9b03fda99e7379 100644
+--- a/dist/esm/PDFSlick.d.ts
++++ b/dist/esm/PDFSlick.d.ts
+@@ -1,4 +1,4 @@
+-import { type OnProgressParameters, PDFDocumentProxy, AbortException, ResponseException, InvalidPDFException, RenderingCancelledException } from "pdfjs-dist";
++import { type OnProgressParameters, PDFDocumentLoadingTask, PDFDocumentProxy, AbortException, ResponseException, InvalidPDFException, RenderingCancelledException } from "pdfjs-dist";
+ import type { DocumentInitParameters } from "pdfjs-dist/types/src/display/api";
+ import { EventBus, PDFViewer, PDFLinkService, DownloadManager, PDFFindController, PDFPageView } from "pdfjs-dist/web/pdf_viewer.mjs";
+ import { L10n } from "pdfjs-dist/types/web/pdf_viewer";
+@@ -17,6 +17,8 @@ export declare class PDFSlick {
+     viewer: PDFViewer;
+     thumbnailViewer?: PDFThumbnailViewer;
+     document: PDFDocumentProxy | null;
++    loadingTask: PDFDocumentLoadingTask | null;
++    destroyed: boolean;
+     store: StoreApi<PDFSlickState>;
+     filename: string;
+     l10n: L10n;
+@@ -54,6 +56,7 @@ export declare class PDFSlick {
+     get supportsPrinting(): boolean;
+     requestPresentationMode(): void;
+     triggerPrinting(): void;
++    destroy(): Promise<void> | void;
+     unbindEvents(): void;
+     _cleanup(): void;
+     setAnnotationEditorMode(annotationEditorMode: number): void;
+diff --git a/dist/esm/index.js b/dist/esm/index.js
+index 1d71e015ffa9bfa6c842e6feea03896d55066c4c..d422b5d752055f17ad4d2a7f71a13862ec61c5c0 100644
+--- a/dist/esm/index.js
++++ b/dist/esm/index.js
+@@ -2496,6 +2496,8 @@ class PDFSlick {
+         this.findController = null;
+         this.pdfPresentationMode = null;
+         this.document = null;
++        this.loadingTask = null;
++        this.destroyed = false;
+         // options
+         _PDFSlick_annotationMode.set(this, void 0);
+         _PDFSlick_annotationEditorMode.set(this, void 0);
+@@ -2593,6 +2595,7 @@ class PDFSlick {
+     loadDocument(url, options) {
+         return __awaiter(this, void 0, void 0, function* () {
+             var _a, _b, _c, _d, _e;
++            this.destroyed = false;
+             if (this.url && typeof this.url === "string") {
+                 try {
+                     URL.revokeObjectURL(this.url);
+@@ -2616,10 +2619,15 @@ class PDFSlick {
+                 const filename = (_c = options === null || options === void 0 ? void 0 : options.filename) !== null && _c !== void 0 ? _c : getPdfFilenameFromUrl((_d = this.url) === null || _d === void 0 ? void 0 : _d.toString());
+                 this.filename = filename;
+                 const pdfDocumentLoader = getDocument(Object.assign(Object.assign({}, this.getDocumentParams), { url: this.url, enableHWA: this.enableHWA }));
++                this.loadingTask = pdfDocumentLoader;
+                 if (!!(options === null || options === void 0 ? void 0 : options.onProgress)) {
+                     pdfDocumentLoader.onProgress = options.onProgress;
+                 }
+                 const pdfDocument = yield pdfDocumentLoader.promise;
++                if (this.destroyed || this.loadingTask !== pdfDocumentLoader) {
++                    yield pdfDocumentLoader.destroy();
++                    return;
++                }
+                 this.document = pdfDocument;
+                 this.viewer.setDocument(this.document);
+                 this.linkService.setDocument(this.document);
+@@ -2644,7 +2652,7 @@ class PDFSlick {
+                 this.forceRendering();
+             }
+             catch (err) {
+-                if (__classPrivateFieldGet(this, _PDFSlick_onError, "f")) {
++                if (!this.destroyed && __classPrivateFieldGet(this, _PDFSlick_onError, "f")) {
+                     __classPrivateFieldGet(this, _PDFSlick_onError, "f").call(this, err);
+                 }
+             }
+@@ -2733,6 +2741,19 @@ class PDFSlick {
+     triggerPrinting() {
+         __classPrivateFieldGet(this, _PDFSlick_printService, "f").print();
+     }
++    destroy() {
++        var _a, _b;
++        this.destroyed = true;
++        this.unbindEvents();
++        this._cleanup();
++        this.viewer.setDocument(null);
++        this.linkService.setDocument(null);
++        (_a = this.thumbnailViewer) === null || _a === void 0 ? void 0 : _a.setDocument(null);
++        const loadingTask = (_b = this.loadingTask) !== null && _b !== void 0 ? _b : this.document?.loadingTask;
++        this.loadingTask = null;
++        this.document = null;
++        return loadingTask?.destroy();
++    }
+     unbindEvents() {
+         var _a;
+         (_a = __classPrivateFieldGet(this, _PDFSlick_eventAbortController, "f")) === null || _a === void 0 ? void 0 : _a.abort();
