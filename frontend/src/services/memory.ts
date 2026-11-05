@@ -86,6 +86,7 @@ export function createMemoryServices(options: MemoryOptions = {}): AppServices {
     files: {
       openBase64TextFile: async () => ({ cancelled: true }),
       saveDecodedPDF: async () => ({ cancelled: true }),
+      saveDiagram: async () => ({ cancelled: true }),
     },
   };
 }

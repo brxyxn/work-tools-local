@@ -19,6 +19,11 @@ export interface PayloadPort {
 export interface FilePort {
   openBase64TextFile(): Promise<ServiceModels.OpenTextResult>;
   saveDecodedPDF(defaultName: string, bytes: Uint8Array<ArrayBuffer>): Promise<ServiceModels.SaveResult>;
+  saveDiagram(
+    defaultName: string,
+    format: string,
+    bytes: Uint8Array<ArrayBuffer>,
+  ): Promise<ServiceModels.SaveResult>;
 }
 
 export interface AppServices {

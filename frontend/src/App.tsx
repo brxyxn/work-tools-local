@@ -6,6 +6,7 @@ import { tools, type ToolID } from "./app/tools";
 import type { AppServices, RecoveryInfo } from "./services/types";
 import { wailsServices } from "./services/wails";
 import { Base64PdfTool } from "./tools/base64-pdf/Base64PdfTool";
+import { MermaidTool } from "./tools/mermaid/MermaidTool";
 
 type Theme = "light" | "dark";
 
@@ -168,6 +169,10 @@ function App({ services = wailsServices }: AppProps) {
         {activeToolID === "base64-pdf" ? (
           <section className="workspace-card tool-workspace" aria-label="Base64 → PDF workspace">
             <Base64PdfTool files={services.files} />
+          </section>
+        ) : activeToolID === "mermaid" ? (
+          <section className="workspace-card tool-workspace" aria-label="Mermaid Editor workspace">
+            <MermaidTool files={services.files} appTheme={theme} />
           </section>
         ) : (
           <section className="workspace-card" aria-label={`${activeTool.label} workspace`}>

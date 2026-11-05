@@ -87,6 +87,33 @@ kbd { display: flex; align-items: center; gap: 1px; padding: 2px 5px; border: 1p
 .pdf-preview-frame { position: relative; display: grid; min-height: 0; flex: 1; place-items: center; overflow: hidden; border: 1px solid var(--border); border-radius: 10px; color: var(--muted); background: var(--surface-solid); }
 .pdf-preview { position: relative; width: 100%; height: 100%; min-height: 0; overflow: hidden; }
 
+.mermaid-tool { display: flex; height: 100%; min-height: 0; flex-direction: column; gap: 10px; }
+.mermaid-toolbar { display: flex; flex: 0 0 auto; flex-wrap: wrap; align-items: center; gap: 10px; }
+.mermaid-theme-switch { display: inline-flex; padding: 2px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface-solid); }
+.mermaid-theme-switch button { display: inline-flex; height: 28px; align-items: center; gap: 5px; padding: 0 10px; border: 0; border-radius: 7px; color: var(--muted); background: transparent; cursor: pointer; font-size: 12px; }
+.mermaid-theme-switch button[aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); }
+.mermaid-scale { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+.mermaid-scale select { height: 32px; padding: 0 7px; border: 1px solid var(--border); border-radius: 8px; color: inherit; background: var(--surface-solid); font-size: 12px; }
+.mermaid-exports { display: inline-flex; flex: 1; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
+.mermaid-exports button { display: inline-flex; height: 32px; align-items: center; gap: 6px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; color: inherit; background: var(--surface-solid); cursor: pointer; font-size: 12px; }
+.mermaid-exports button:hover:enabled { color: var(--accent); background: var(--accent-soft); }
+.mermaid-exports button:disabled { cursor: default; opacity: .45; }
+.mermaid-exports .clear-action { color: var(--muted); background: transparent; }
+.mermaid-panes { display: grid; min-height: 0; flex: 1; grid-template-columns: minmax(260px, 2fr) minmax(0, 3fr); gap: 12px; }
+.mermaid-editor { display: flex; min-height: 0; flex-direction: column; gap: 8px; }
+.mermaid-editor > label { font-size: 12px; font-weight: 650; }
+.mermaid-editor textarea { width: 100%; min-height: 0; flex: 1; resize: none; padding: 11px 12px; border: 1px solid var(--border); border-radius: 9px; outline: 0; color: inherit; background: var(--surface-solid); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; line-height: 1.6; tab-size: 2; }
+.mermaid-editor textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.mermaid-syntax-error { max-height: 120px; margin: 0; padding: 9px 10px; overflow: auto; border-radius: 8px; color: #b92336; background: rgba(209, 56, 72, .1); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; line-height: 1.5; white-space: pre-wrap; }
+.mermaid-preview { display: flex; min-width: 0; min-height: 0; flex-direction: column; gap: 8px; }
+.mermaid-preview-label { color: var(--muted); font-size: 11px; font-weight: 650; }
+/* The canvas mirrors the exported backdrop so the preview matches the file. */
+.mermaid-canvas { display: flex; min-height: 0; flex: 1; align-items: center; justify-content: center; padding: 14px; overflow: auto; border: 1px solid var(--border); border-radius: 10px; color: var(--muted); background: #fff; }
+.mermaid-canvas[data-diagram-theme="dark"] { color: #99a4b4; background: #11151b; }
+.mermaid-canvas p { margin: 0; font-size: 12px; }
+.mermaid-figure { display: flex; width: 100%; height: 100%; align-items: center; justify-content: center; }
+.mermaid-figure svg { max-width: 100%; max-height: 100%; }
+
 .command-backdrop { position: fixed; inset: 0; z-index: 20; display: grid; place-items: start center; padding-top: 18vh; background: rgba(9, 13, 19, .28); backdrop-filter: blur(4px); }
 .command-dialog { width: min(500px, calc(100vw - 40px)); overflow: hidden; border: 1px solid var(--border); border-radius: 13px; background: var(--surface-solid); box-shadow: 0 28px 90px rgba(0, 0, 0, .28); }
 .command-input-row { display: flex; align-items: center; gap: 10px; padding: 0 15px; border-bottom: 1px solid var(--border); color: var(--muted); }
@@ -117,6 +144,8 @@ kbd { display: flex; align-items: center; gap: 1px; padding: 2px 5px; border: 1p
   .app-shell { grid-template-columns: 210px minmax(0, 1fr); }
   .workspace { padding: 64px 28px 24px; }
   .workspace-card.tool-workspace { padding: 14px; }
+  .mermaid-panes { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(140px, 1fr) minmax(0, 2fr); }
+  .mermaid-exports { justify-content: flex-start; }
 }
 
 @media (max-height: 650px) {

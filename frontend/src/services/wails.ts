@@ -29,5 +29,7 @@ export const wailsServices: AppServices = {
   files: {
     openBase64TextFile: () => FileService.OpenBase64TextFile(),
     saveDecodedPDF: (defaultName, bytes) => FileService.SaveDecodedPDF(defaultName, bytesToBase64(bytes)),
+    saveDiagram: (defaultName, format, bytes) =>
+      FileService.SaveDiagram(defaultName, format, bytesToBase64(bytes)),
   },
 };
