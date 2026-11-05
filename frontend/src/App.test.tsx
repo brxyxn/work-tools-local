@@ -22,17 +22,18 @@ describe("Work Tools shell", () => {
     expect(sidebar).not.toHaveClass("sidebar");
   });
 
-  test("navigation exposes exactly the three implemented tools", async () => {
+  test("navigation exposes exactly the four implemented tools", async () => {
     render(<App services={createMemoryServices()} />);
 
     const navigation = await screen.findByRole("navigation", { name: "Tools" });
     const toolButtons = within(navigation).getAllByRole("button");
 
-    expect(toolButtons).toHaveLength(3);
+    expect(toolButtons).toHaveLength(4);
     expect(toolButtons.map((button) => button.textContent)).toEqual([
       "Text Diff",
       "JSON Visualizer",
       "Base64 → PDF",
+      "Mermaid Editor",
     ]);
     expect(screen.queryByText(/UUID/i)).not.toBeInTheDocument();
   });
@@ -58,7 +59,7 @@ describe("Work Tools shell", () => {
     fireEvent.keyDown(window, { key: "k", metaKey: true });
 
     const dialog = screen.getByRole("dialog", { name: "Find a tool" });
-    expect(within(dialog).getAllByRole("option")).toHaveLength(3);
+    expect(within(dialog).getAllByRole("option")).toHaveLength(4);
     expect(screen.queryByText(/UUID/i)).not.toBeInTheDocument();
   });
 
@@ -89,6 +90,16 @@ describe("Work Tools shell", () => {
 
     expect(await screen.findByRole("heading", { name: "JSON Visualizer" })).toBeVisible();
     expect(document.documentElement.dataset.theme).toBe("dark");
+  });
+
+  test("opens the Mermaid editor workspace from the sidebar", async () => {
+    const user = userEvent.setup();
+    render(<App services={createMemoryServices()} />);
+
+    await user.click(await screen.findByRole("button", { name: "Mermaid Editor" }));
+
+    expect(screen.getByRole("region", { name: "Mermaid Editor workspace" })).toBeVisible();
+    expect(screen.getByLabelText("Diagram source")).toBeVisible();
   });
 
   test("shows database recovery details instead of the workspace", async () => {

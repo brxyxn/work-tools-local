@@ -1,8 +1,8 @@
 # Work Tools
 
-A local-first macOS desktop application for Text Diff, JSON visualization, and
-Base64-to-PDF conversion. This repository is the Wails migration target for
-`work-tools-web`.
+A local-first macOS desktop application for Text Diff, JSON visualization,
+Base64-to-PDF conversion, and Mermaid diagram editing. This repository is the
+Wails migration target for `work-tools-web`.
 
 ## Requirements
 

@@ -16,3 +16,7 @@ export function OpenBase64TextFile(): $CancellablePromise<$models.OpenTextResult
 export function SaveDecodedPDF(defaultName: string, data: string | null): $CancellablePromise<$models.SaveResult> {
     return $Call.ByID(1472345682, defaultName, data);
 }
+
+export function SaveDiagram(defaultName: string, format: string, data: string | null): $CancellablePromise<$models.SaveResult> {
+    return $Call.ByID(4037689207, defaultName, format, data);
+}
